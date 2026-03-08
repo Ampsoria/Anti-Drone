@@ -1,42 +1,48 @@
-# โครงการติดตามและระบุพิกัดโดรน (Drone Tracking System)
+# Drone Tracking System
 
-## ภาพรวมระบบ (Overview)
-ระบบตรวจจับ ติดตาม และประเมินพิกัด GPS สำหรับโดรนขนาดเล็กจากวิดีโอ ระบบนี้ทำงานโดยใช้โมเดล **YOLO** ในการหาตำแหน่งโดรนในเฟรมภาพ และใช้ **Machine Learning Model** ในการแปลงค่า Bounding Box เป็นพิกัด GPS (ละติจูด, ลองจิจูด, ระดับความสูง) พร้อมส่งข้อมูลตำแหน่งและรูปภาพที่ตรวจพบล่าสุดไปยัง **TESA API** แบบอัตโนมัติ
+## Overview
+A system for detecting, tracking, and estimating GPS coordinates for small drones from video. This system uses a **YOLO** model to find the drone's position in the video frame, and uses a **Machine Learning Model** to convert Bounding Box values into GPS coordinates (latitude, longitude, altitude). It also automatically sends the latest detected location data and images to the **TESA API**.
 
-## คุณสมบัติหลัก (Features)
--  **ตรวจจับโดรนที่แม่นยำ:** ทำงานด้วยโมเดลวิเคราะห์ภาพ `best_6.1.pt` (YOLO)
--  **ประเมินพิกัด GPS ทันที:** คำนวณรังวัด Lat/Lon/Alt จำลองพิกัดเป้าหมายจากขนาดและตำแหน่งด้วยโมเดล `improved_gps_model.pkl`
--  **ระบบ Tracking อัจฉริยะ:** สามารถติดตามโดรนได้พร้อมกัน 2 ตัว (Max Detections) สร้าง ID เสถียรและวาดเส้นทางการบิน
--  **บันทึกผลลัพธ์เป็นวิดีโอ:** สร้างไฟล์ผลลัพธ์ `.mp4` โดยมี Timestamp และข้อมูลครบถ้วน และพร้อมดึงขึ้นมาเล่นทันทีเมื่อรันจบ
--  **สลับใช้ GPU/CPU อัตโนมัติ:** ใช้พลังประมวลผลจากการ์ดจอ CUDA เพื่อเฟรมเรตที่รวดเร็ว (ถ้ามี)
--  **เชื่อมโยงกับ TESA API:** รวบรวมข้อมูล JSON และรูปภาพ ส่ง POST Request ขึ้นเซิร์ฟเวอร์เรียลไทม์ผ่านโมดูล `tesa_api.py`
+## Features
+- **Accurate Drone Detection:** Powered by the `best_6.1.pt` model (YOLO).
+- **Real-time GPS Estimation:** Calculates and estimates target coordinates (Lat/Lon/Alt) from size and position using the `improved_gps_model.pkl` model.
+- **Smart Tracking System:** Can track up to 2 drones simultaneously (Max Detections), create stable IDs, and draw flight paths.
+- **Save Results as Video:** Creates an `.mp4` output file with Timestamps and complete data, ready to play immediately when processing is finished.
+- **Auto GPU/CPU Switching:** Utilizes CUDA graphics card processing power for fast framerates (if available).
+- **TESA API Integration:** Collects JSON data and images, sending real-time POST requests to the server via the `tesa_api.py` module.
 
-## ไฟล์ต่างๆ ภายในโปรเจกต์ (Project Structure)
-- `4_gps_testing.py`: สคริปต์หลัก (Main script) ในการเริ่มอ่านวิดีโอและรันโมเดลทั้งหมด
-- `tesa_api.py`: ไฟล์จัดการส่วนของการส่งผลลัพธ์ Tracking และรูปภาพขึ้นสู่ API
-- `best_6.1.pt`: Weights ของโมเดล YOLO 
-- `improved_gps_model.pkl`: โมเดลสำหรับการพยากรณ์พิกัด
-- `scaler_features.pkl` & `scaler_targets.pkl`: ไฟล์ช่วยจัดการสเกลข้อมูล Feature และเป้าหมายก่อน/หลังเข้าโมเดล GPS
+## Demo
 
-## ข้อกำหนดระบบและการติดตั้ง (Prerequisites)
-ภาษาที่ใช้: **Python 3.x**
+[![Watch the video](https://img.shields.io/badge/YouTube-Watch%20Demo-red?style=for-the-badge&logo=youtube)](https://youtu.be/CXnDO8Qoxrs)
 
-ติดตั้งไลบรารีที่จำเป็นทั้งหมดด้วยคำสั่ง:
+![Demo](Demo/Screenshot%202026-03-08%20152559.png)
+
+## Project Structure
+- `4_gps_testing.py`: Main script to start reading the video and running all models.
+- `tesa_api.py`: File managing the part of sending Tracking results and images to the API.
+- `best_6.1.pt`: YOLO model weights.
+- `improved_gps_model.pkl`: Model for coordinate prediction.
+- `scaler_features.pkl` & `scaler_targets.pkl`: Helper files to manage scaling of Feature data and targets before/after entering the GPS model.
+
+## Prerequisites
+Language: **Python 3.x**
+
+Install all required libraries with the following command:
 ```bash
 pip install opencv-python numpy ultralytics joblib scikit-learn torch requests
 ```
 
-## การนำไปใช้งาน (Usage)
-1. **กำหนดที่อยู่วิดีโอต้นทาง** ในไฟล์ `4_gps_testing.py` แก้ไขตัวแปรบรรทัดด้านล่างให้ตรงกับตำแหน่งไฟล์ในเครื่องของคุณ:
+## Usage
+1. **Set the source video path** in the `4_gps_testing.py` file. Edit the variable below to match the file location on your machine:
    ```python
    video_path = r'C:\Users\MSII\OneDrive\Desktop\P3_DRONE\P3_VIDEO.mp4'
    ```
-2. **การตั้งค่า Environment Variables** ของ API (สามารถข้ามได้ถ้า API ทดสอบของเดิมใช้งานได้):
-   - `TESA_API_BASE_URL` - Base URL ของ API
-   - `TESA_CAMERA_ID` - ไอดีของกล้อง (รหัสกล้อง)
-   - `TESA_CAMERA_TOKEN` - Token ยืนยันตัวตนส่งข้อมูลกล้อง
-3. **รันตัวติดตามโดรน**:
+2. **Setup API Environment Variables** (can be skipped if the existing test API works):
+   - `TESA_API_BASE_URL` - Base URL of the API
+   - `TESA_CAMERA_ID` - Camera ID
+   - `TESA_CAMERA_TOKEN` - Authentication token for sending camera data
+3. **Run the drone tracker**:
    ```bash
    python 4_gps_testing.py
    ```
-4. **ดูผลลัพธ์** หน้าจอพรีวิว Detections จะถูกแสดงขึ้นมาตามเวลาจริง (สามารถกดปุ่ม `q` หรือ `ESC` เพื่อออก) เมื่อวิดีโอประมวลผลเสร็จสิ้น ระบบจะบันทึกวิดีโอ .mp4 เข้าไปในแฟ้มเดียวกันแล้วพยายามเปิตอัตโนมัติ
+4. **View results**: A detection preview screen will be displayed in real-time (you can press `q` or `ESC` to exit). When the video has finished processing, the system will save an `.mp4` video in the same folder and try to open it automatically.
